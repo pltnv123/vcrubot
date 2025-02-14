@@ -1,0 +1,22 @@
+# Исключаем виртуальное окружение
+venv/
+.venv/
+
+# Python файлы
+*.py[cod]
+__pycache__/
+
+# База данных SQLite
+db.sqlite3
+
+# Логи
+*.log
+
+# Файлы IDE
+.vscode/
+.idea/
+
+# Другие временные файлы
+*.swp
+
+.env
