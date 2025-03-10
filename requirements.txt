@@ -2,7 +2,6 @@ Django==5.1.5
 celery==5.3.6
 redis==5.0.4
 selenium==4.15.2
-Pillow==10.3.0
 pyperclip==1.8.2
 keyboard==0.13.5
 requests==2.31.0

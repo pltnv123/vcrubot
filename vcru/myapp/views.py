@@ -9,8 +9,10 @@ load_dotenv()
 def start_task(request):
     # Получаем конфиденциальные данные из переменных окружения
     webhook_url = "https://hook.eu2.make.com/q20tb4ip6m24jxzldaksu955hgcfuejy"
-    username = os.getenv("USERNAME")
+    username = os.getenv("USERNAMES")
+    # username = "dotasymphony@gmail.com"
     password = os.getenv("PASSWORD")
+    # password = "Z12345678z+"
 
     task = run_selenium_task.delay(webhook_url, username, password)
 

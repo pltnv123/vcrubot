@@ -1,10 +1,10 @@
 import os
+import random
 import pyperclip
 import keyboard
 import requests
 import json
 import time
-
 from PIL import Image
 from celery import shared_task
 from selenium import webdriver
@@ -16,7 +16,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
 # Путь для загрузки изображений (НЕ ИЗМЕНЯТЬ)
-file_path2 = r"D:\vcrubot\vcru\downloaded_image_from_webhook.png"
+file_path2 = r"C:\ТИПО Д\prjct\vcrubot\vcru\downloaded_image_from_webhook.png"
 
 
 # Функция для получения данных из webhook
@@ -82,6 +82,9 @@ def download_image_from_webhook(image_url):
         return False
 
 
+
+
+
 @shared_task(bind=True)
 def run_selenium_task(self, webhook_url, username, password):
     driver = None
@@ -97,17 +100,33 @@ def run_selenium_task(self, webhook_url, username, password):
             if not download_image_from_webhook(image_url):
                 print("Не удалось загрузить изображение. Продолжаем без него.")
 
-
-
-        # Используй webdriver-manager для автоматического выбора совместимой версии драйвера
+        # Установка ChromeDriver
         service = Service(ChromeDriverManager().install())
-        options = webdriver.ChromeOptions()
-        options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        options.add_experimental_option("useAutomationExtension", False)
 
-        # Создаём новый экземпляр драйвера с автоматической установкой нужной версии
+        # Настройка опций Chrome
+        options = webdriver.ChromeOptions()
+        options.add_argument("--disable-blink-features=AutomationControlled")  # Убираем флаг автоматизации
+        options.add_experimental_option("excludeSwitches",
+                                        ["enable-automation"])  # Убираем уведомление об управлении браузером
+        options.add_experimental_option("useAutomationExtension", False)  # Отключаем стандартное расширение Selenium
+        options.add_argument(
+            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Safari/537.36")  # Устанавливаем реальный User-Agent
+
+        # Запуск браузера
         driver = webdriver.Chrome(service=service, options=options)
+
+        # Убираем navigator.webdriver
+        driver.execute_cdp_cmd('Page.addScriptToEvaluateOnNewDocument', {
+            "source": """
+            Object.defineProperty(navigator, 'webdriver', {
+              get: () => undefined
+            });
+            """
+        })
+
+        # Функция для имитации задержек
+        def random_delay(min_time=1, max_time=3):
+            time.sleep(random.uniform(min_time, max_time))
         try:
             driver.get("https://vc.ru/")
             time.sleep(2)
@@ -284,44 +303,34 @@ def run_selenium_task(self, webhook_url, username, password):
 
             keyboard.press_and_release('enter')
 
-            # --- Добавление изображения ---
-            if os.path.exists(file_path2):
-                panel_button = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.CSS_SELECTOR, "div.ce-toolbar.opened > div > span > i"))
-                )
-                panel_button.click()
-                time.sleep(3)
-                upload_image_button = WebDriverWait(driver, 10).until(
-                    EC.element_to_be_clickable((By.CSS_SELECTOR,
-                                                "#app > div.modal-fullpage > div > div > div > div.editor__body > div > div > div > div.ce-toolbar.opened > div > div.ce-popover.ce-toolbox.opened > div.ce-popover__content > div > li:nth-child(5) > span.ce-toolbox__item-title"))
-                )
-                upload_image_button.click()
-                time.sleep(5)
-                pyperclip.copy(file_path2)
-                keyboard.press_and_release('ctrl+v')
-                time.sleep(2)
-                keyboard.press_and_release('enter')
-                time.sleep(5)
-                print("Фото загружено.")
+            # --- СДЕЛАЮ ПОТОМ ДОБАВЛЕНИЕ ВТОРОГО ИЗОБРАЖЕНИЯ ---
+            # if os.path.exists(file_path2):
+            #     panel_button = WebDriverWait(driver, 10).until(
+            #         EC.element_to_be_clickable((By.CSS_SELECTOR, "div.ce-toolbar.opened > div > span > i"))
+            #     )
+            #     panel_button.click()
+            #     time.sleep(3)
+            #     upload_image_button = WebDriverWait(driver, 10).until(
+            #         EC.element_to_be_clickable((By.CSS_SELECTOR,
+            #                                     "#app > div.modal-fullpage > div > div > div > div.editor__body > div > div > div > div.ce-toolbar.opened > div > div.ce-popover.ce-toolbox.opened > div.ce-popover__content > div > li:nth-child(5) > span.ce-toolbox__item-title"))
+            #     )
+            #     upload_image_button.click()
+            #     time.sleep(5)
+            #     pyperclip.copy(file_path2)
+            #     keyboard.press_and_release('ctrl+v')
+            #     time.sleep(2)
+            #     keyboard.press_and_release('enter')
+            #     time.sleep(5)
+            #     print("Фото загружено.")
+            #
+            #     time.sleep(5)
+            #     keyboard.press_and_release('tab')
+            #     time.sleep(1)
+            #     keyboard.press_and_release('enter')
+            #     time.sleep(1)
+            #     keyboard.press_and_release('enter')
+            #
 
-                time.sleep(5)
-                keyboard.press_and_release('tab')
-                time.sleep(1)
-                keyboard.press_and_release('enter')
-                time.sleep(1)
-                keyboard.press_and_release('enter')
-                # image_element = WebDriverWait(driver, 10).until(
-                #     EC.element_to_be_clickable((By.CSS_SELECTOR,
-                #                                 "#app > div.modal-fullpage > div > div > div > div.editor__body > div > div > div > div.ce-redactor > div.ce-block.ce-block--focused > div.ce-block__content > div > div > div.media.editor-media-tool-single > div.andropov-media.andropov-image > picture"))
-                # )
-                # image_element.click()
-                #
-                # # #app > div.modal-fullpage > div > div > div > div.editor__body > div > div > div > div.ce-redactor > div.ce-block.ce-block--focused > div.ce-block__content > div > div > div.media.editor-media-tool-single > div.andropov-media.andropov-image > picture
-                # time.sleep(1)
-                # keyboard.press_and_release('tab')
-                # time.sleep(0.1)
-                # keyboard.press_and_release('tab')
-                # time.sleep(3)
 
             print("enter")
             print("Пост опубликован!")
